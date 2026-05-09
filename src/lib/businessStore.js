@@ -209,7 +209,27 @@ const localApi = {
       expiresAt: now + OTP_TTL,
     });
     writeOtpStore(otpStore);
-    console.info(`Signup verification code for ${normalizedEmail}: ${otp}`);
+
+    try {
+      const response = await fetch("/api/send-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: normalizedEmail, code: otp }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "SMTP email delivery failed.");
+      }
+
+      console.info(`Signup verification code sent to ${normalizedEmail}`);
+    } catch (sendError) {
+      console.warn("SMTP send failed, falling back to console delivery:", sendError);
+      console.info(`Signup verification code for ${normalizedEmail}: ${otp}`);
+    }
+
     return { sent: true };
   },
 
