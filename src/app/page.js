@@ -15,12 +15,6 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (getActiveUser()) {
-      router.replace("/dashboard");
-    }
-  }, [router]);
-
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError("");
@@ -42,11 +36,21 @@ export default function LoginPage() {
 
     try {
       setSubmitting(true);
+
       if (mode === "signup") {
-        await businessApi.signUp({ businessName, businessType, email, password });
+        await businessApi.requestSignupOtp({ email });
+        const params = new URLSearchParams({
+          email: email,
+          businessName: businessName,
+          businessType: businessType,
+          password: password,
+        });
+        router.push(`/verify-email?${params.toString()}`);
+        return;
       } else {
         await businessApi.login({ email, password });
       }
+
       router.push("/dashboard");
     } catch (err) {
       setError(err.message || "Could not access the business workspace.");
@@ -178,10 +182,10 @@ export default function LoginPage() {
             <span aria-hidden="true">→</span>
             {submitting
               ? mode === "signup"
-                ? "Creating..."
+                ? "Sending..."
                 : "Logging in..."
               : mode === "signup"
-                ? "Create account"
+                ? "Send verification code"
                 : "Login"}
           </button>
 

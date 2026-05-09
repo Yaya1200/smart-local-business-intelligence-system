@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useBusinessData } from "@/lib/useBusinessData";
+import { logout } from "@/lib/businessStore";
 
 const money = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -10,7 +12,13 @@ const money = new Intl.NumberFormat("en-US", {
 });
 
 export default function DashboardPage() {
+  const router = useRouter();
   const { user, dashboard, loading, error } = useBusinessData();
+
+  const handleLogout = () => {
+    logout();
+    router.push("/");
+  };
 
   if (loading) {
     return <main className="grid min-h-screen place-items-center bg-[#f7f4ee]">Loading dashboard...</main>;
@@ -44,6 +52,7 @@ export default function DashboardPage() {
             <Link className="nav-button" href="/transaction">+ Sale</Link>
             <Link className="nav-button secondary" href="/inventory">Stock</Link>
             <Link className="nav-button secondary" href="/insights">Insights</Link>
+            <button onClick={handleLogout} className="nav-button secondary bg-[#b42318] text-white hover:bg-[#8a1a11]">Logout</button>
           </nav>
         </header>
 

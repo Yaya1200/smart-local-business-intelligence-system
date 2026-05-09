@@ -27,6 +27,28 @@ const starterProducts = [
   { name: "Bread", price: 1.25, stock: 5 },
 ];
 
+const OTP_STORE_KEY = "sabi_signup_otps";
+const OTP_TTL = 15 * 60 * 1000; // 15 minutes
+
+const readOtpStore = () => {
+  if (typeof window === "undefined") return [];
+
+  const raw = window.localStorage.getItem(OTP_STORE_KEY);
+  if (!raw) return [];
+
+  try {
+    return JSON.parse(raw) || [];
+  } catch {
+    return [];
+  }
+};
+
+const writeOtpStore = (store) => {
+  window.localStorage.setItem(OTP_STORE_KEY, JSON.stringify(store));
+};
+
+const generateOtp = () => String(Math.floor(100000 + Math.random() * 900000));
+
 const uid = () => {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
     return crypto.randomUUID();
@@ -88,6 +110,11 @@ export const getActiveUser = () => {
 
 export const setActiveUser = (user) => {
   window.localStorage.setItem(ACTIVE_USER_KEY, JSON.stringify(sanitizeUser(user)));
+};
+
+export const logout = () => {
+  window.localStorage.removeItem(ACTIVE_USER_KEY);
+  window.dispatchEvent(new Event("sabi-store-changed"));
 };
 
 export const listenForStoreChanges = (callback) => {
@@ -162,6 +189,49 @@ const mapStats = ({ products, transactions, insights }) => {
 };
 
 const localApi = {
+  async requestSignupOtp({ email }) {
+    const normalizedEmail = normalizeEmail(email);
+    const store = readStore();
+    const existing = store.users.find(
+      (item) => item.email?.toLowerCase() === normalizedEmail,
+    );
+
+    if (existing) {
+      throw new Error("An account with this email already exists.");
+    }
+
+    const otp = generateOtp();
+    const now = Date.now();
+    const otpStore = readOtpStore().filter((item) => item.expiresAt > now);
+    otpStore.push({
+      email: normalizedEmail,
+      code: otp,
+      expiresAt: now + OTP_TTL,
+    });
+    writeOtpStore(otpStore);
+    console.info(`Signup verification code for ${normalizedEmail}: ${otp}`);
+    return { sent: true };
+  },
+
+  async verifySignupOtp({ email, code }) {
+    const normalizedEmail = normalizeEmail(email);
+    const now = Date.now();
+    const otpStore = readOtpStore();
+    const matchingCode = otpStore.find(
+      (item) =>
+        item.email === normalizedEmail &&
+        item.code === code &&
+        item.expiresAt > now,
+    );
+
+    if (!matchingCode) {
+      throw new Error("Invalid or expired verification code.");
+    }
+
+    writeOtpStore(otpStore.filter((item) => item !== matchingCode));
+    return { verified: true };
+  },
+
   async signUp({ businessName, businessType, email, password }) {
     const store = readStore();
     const normalizedName = businessName.trim();
@@ -323,6 +393,40 @@ const localApi = {
 };
 
 const supabaseApi = {
+  async requestSignupOtp({ email }) {
+    const normalizedEmail = normalizeEmail(email);
+    const { data: existing, error: readError } = await supabase
+      .from("users")
+      .select("id")
+      .ilike("email", normalizedEmail)
+      .maybeSingle();
+
+    if (readError) throw readError;
+    if (existing) {
+      throw new Error("An account with this email already exists.");
+    }
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email: normalizedEmail,
+      options: { emailRedirectTo: typeof window !== "undefined" ? window.location.origin : undefined },
+    });
+
+    if (error) throw error;
+    return { sent: true };
+  },
+
+  async verifySignupOtp({ email, code }) {
+    const normalizedEmail = normalizeEmail(email);
+    const { error } = await supabase.auth.verifyOtp({
+      email: normalizedEmail,
+      token: code,
+      type: "email",
+    });
+
+    if (error) throw error;
+    return { verified: true };
+  },
+
   async signUp({ businessName, businessType, email, password }) {
     const normalizedName = businessName.trim();
     const normalizedEmail = normalizeEmail(email);

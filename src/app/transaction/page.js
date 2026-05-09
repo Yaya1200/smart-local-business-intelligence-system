@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { businessApi } from "@/lib/businessStore";
+import { businessApi, logout } from "@/lib/businessStore";
 import { useBusinessData } from "@/lib/useBusinessData";
 
 export default function AddTransactionPage() {
@@ -14,6 +14,11 @@ export default function AddTransactionPage() {
   const [price, setPrice] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    router.push("/");
+  };
 
   const selectedProduct = useMemo(
     () =>
@@ -68,7 +73,10 @@ export default function AddTransactionPage() {
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#ad4d3b]">Add transaction</p>
             <h1 className="mt-2 text-3xl font-semibold">Record a sale</h1>
           </div>
-          <Link href="/dashboard" className="nav-button secondary">Dashboard</Link>
+          <nav className="flex gap-2">
+            <Link href="/dashboard" className="nav-button secondary">Dashboard</Link>
+            <button onClick={handleLogout} className="nav-button secondary bg-[#b42318] text-white hover:bg-[#8a1a11]">Logout</button>
+          </nav>
         </header>
 
         <section className="mt-6 grid gap-5 md:grid-cols-[1fr_280px]">

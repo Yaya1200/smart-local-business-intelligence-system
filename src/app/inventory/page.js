@@ -1,17 +1,24 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { businessApi } from "@/lib/businessStore";
+import { businessApi, logout } from "@/lib/businessStore";
 import { useBusinessData } from "@/lib/useBusinessData";
 
 export default function InventoryPage() {
+  const router = useRouter();
   const { user, dashboard, loading, refresh } = useBusinessData();
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [stock, setStock] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    router.push("/");
+  };
 
   const addProduct = async (event) => {
     event.preventDefault();
@@ -57,6 +64,7 @@ export default function InventoryPage() {
           <nav className="flex gap-2">
             <Link href="/transaction" className="nav-button">+ Sale</Link>
             <Link href="/dashboard" className="nav-button secondary">Dashboard</Link>
+            <button onClick={handleLogout} className="nav-button secondary bg-[#b42318] text-white hover:bg-[#8a1a11]">Logout</button>
           </nav>
         </header>
 
