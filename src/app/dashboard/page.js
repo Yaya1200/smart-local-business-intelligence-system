@@ -6,7 +6,7 @@ import { useBusinessData } from "@/lib/useBusinessData";
 import { logout } from "@/lib/businessStore";
 import {
   LayoutDashboard, Package, TrendingUp, BarChart3,
-  LogOut, Plus, Search, Bell
+  LogOut, Plus, Search, Bell, ShieldCheck
 } from 'lucide-react';
 
 const money = new Intl.NumberFormat("en-US", {
@@ -101,6 +101,7 @@ export default function DashboardPage() {
           <SidebarItem icon={LayoutDashboard} label="Dashboard" active href="/dashboard" />
           <SidebarItem icon={Plus} label="Transaction" href="/transaction" />
           <SidebarItem icon={Package} label="Inventory" href="/inventory" />
+          <SidebarItem icon={ShieldCheck} label="Validator" href="/dashboard/validator" />
           <SidebarItem icon={BarChart3} label="Insights" href="/insights" />
 
           <p className="px-6 text-[10px] uppercase text-gray-500 font-bold mt-8 mb-2">General</p>
@@ -245,7 +246,10 @@ export default function DashboardPage() {
           <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
             <h2 className="font-bold mb-4">Quick Actions</h2>
             <div className="space-y-3">
-              <Link href="/transaction" className="block w-full bg-purple-600 text-white text-center py-3 rounded-lg hover:bg-purple-700 transition-colors font-medium">
+              <Link href="/dashboard/validator" className="block w-full bg-purple-600 text-white text-center py-3 rounded-lg hover:bg-purple-700 transition-colors font-medium">
+                🔍 Transaction Validator
+              </Link>
+              <Link href="/transaction" className="block w-full bg-gray-100 text-gray-700 text-center py-3 rounded-lg hover:bg-gray-200 transition-colors font-medium">
                 + Record Sale
               </Link>
               <Link href="/inventory" className="block w-full bg-gray-100 text-gray-700 text-center py-3 rounded-lg hover:bg-gray-200 transition-colors font-medium">
