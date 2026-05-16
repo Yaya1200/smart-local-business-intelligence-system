@@ -122,7 +122,7 @@ export async function getTodayVsYesterdaySales(
               cookieStore.set(name, value, options)
             );
           } catch (error) {
-            // Handle cookie setting errors silently
+            
           }
         },
       },
